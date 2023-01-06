@@ -44,13 +44,26 @@ export class RoomComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadingStatus.isLoading = true;
+    const roomId = this.route.snapshot.params[constants.routeParams.id];
     this.currentPlayer$.pipe(take(1)).subscribe(player => {
       if (!player.id) {
-        this.playerCreationService.createPlayer(this.route.snapshot.params[constants.routeParams.id]).subscribe(_ => this.loadingStatus.isLoading = false);
+        this.createNewPlayer(roomId);
       } else {
-        this.loadingStatus.isLoading = false;
+        this.resetExistingPlayer(roomId);
       }
     });
+  }
+
+  private createNewPlayer(roomId: string): void {
+    this.playerCreationService.createPlayer(roomId).subscribe(_ => this.loadingStatus.isLoading = false);
+  }
+
+  private resetExistingPlayer(roomId: string): void {
+    this.firebasePlayerService.updateCurrent({
+      room: roomId,
+      isObserver: false,
+      choice: null,
+    } as Partial<Player>).subscribe(() => this.loadingStatus = { isLoading: false });
   }
 
   leaveRoom(): void {
